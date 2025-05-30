@@ -1,12 +1,15 @@
 let player;
 let isLocked = true;
 let unlockTimer = null;
-let currentPlaylistId = ''; // 기본값은 첫 번째 로드된 재생목록으로 설정됨
+// let currentPlaylistId = ''; // 재생목록 ID 대신 단일 비디오 ID 사용
+const DEFAULT_VIDEO_ID = 'dQw4w9WgXcQ'; // 여기에 원하는 유튜브 비디오 ID를 넣으세요.
+let currentVideoId = DEFAULT_VIDEO_ID;
 const LOCK_DURATION = 5000; // 5초 잠금 해제 홀드 시간
 
 let youtubeApiReady = false;
 let domReady = false;
-let initialPlaylistIdToLoad = null;
+// let initialPlaylistIdToLoad = null; // 단일 비디오용으로 변경
+let initialVideoIdToLoad = null;
 
 // YouTube API 스크립트를 동적으로 로드하는 함수
 function loadYouTubeAPI() {
@@ -26,32 +29,33 @@ function onYouTubeIframeAPIReady() {
     console.log("onYouTubeIframeAPIReady function was CALLED!");
     youtubeApiReady = true;
     console.log("YouTube API is ready.");
-    if (domReady && initialPlaylistIdToLoad) {
-        console.log("DOM was ready, API is now ready, initializing player with stored playlist ID.");
-        initializePlayer(initialPlaylistIdToLoad);
-        initialPlaylistIdToLoad = null; 
-    } else if (domReady && !player && currentPlaylistId) {
-        console.log("DOM ready, API now ready, currentPlaylistId exists. Initializing player.");
-        initializePlayer(currentPlaylistId);
+    if (domReady && initialVideoIdToLoad) {
+        console.log("DOM was ready, API is now ready, initializing player with stored video ID.");
+        initializePlayer(initialVideoIdToLoad);
+        initialVideoIdToLoad = null; 
+    } else if (domReady && !player && currentVideoId) {
+        console.log("DOM ready, API now ready, currentVideoId exists. Initializing player.");
+        initializePlayer(currentVideoId);
     } else {
-        console.log("YouTube API ready. Waiting for DOM or playlist selection.");
+        console.log("YouTube API ready. Waiting for DOM or video ID.");
     }
 }
 
-function initializePlayer(playlistId) {
+function initializePlayer(videoId) {
     if (!youtubeApiReady) {
-        console.log("YouTube API not ready yet. Player initialization deferred. Storing playlist ID: ", playlistId);
-        initialPlaylistIdToLoad = playlistId; 
+        console.log("YouTube API not ready yet. Player initialization deferred. Storing video ID: ", videoId);
+        initialVideoIdToLoad = videoId; 
         return;
     }
     if (player) {
         player.destroy();
     }
     const currentAppOrigin = 'https://baby-assist-videoblock.vercel.app'; // 하드코딩된 origin
-    console.log(`Initializing player with playlist: ${playlistId} and origin: ${currentAppOrigin}`);
+    console.log(`Initializing player with videoId: ${videoId} and origin: ${currentAppOrigin}`);
     player = new YT.Player('player', {
         height: '100%',
         width: '100%',
+        videoId: videoId, // playlist 관련 옵션 대신 videoId 사용
         playerVars: {
             'autoplay': 1,
             'controls': 0,
@@ -61,10 +65,9 @@ function initializePlayer(playlistId) {
             'modestbranding': 1,
             'rel': 0,
             'showinfo': 0,
-            'loop': 1,
-            'listType': 'playlist',
-            'list': playlistId,
-            'origin': currentAppOrigin // 하드코딩된 값 사용
+            'loop': 1, // 단일 영상 반복을 위해서는 playlist 플레이어 변수 추가 필요
+            'playlist': videoId, // 단일 영상 반복을 위해 videoId를 playlist 파라미터에도 전달
+            'origin': currentAppOrigin
         },
         events: {
             'onReady': onPlayerReady,
@@ -80,8 +83,10 @@ function onPlayerReady(event) {
 }
 
 function onPlayerStateChange(event) {
-    if (event.data == YT.PlayerState.ENDED) {
-        player.playVideo(); // 또는 player.loadPlaylist(currentPlaylistId); 로 다음 비디오로
+    // 단일 영상의 경우, YT.PlayerState.ENDED에서 loop:1과 playlist 파라미터 조합으로 자동 반복됨
+    // 필요시 추가 로직 (예: player.playVideo();)
+    if (event.data === YT.PlayerState.ENDED) {
+        console.log("Video ended, loop should restart it.");
     }
 }
 
@@ -101,19 +106,18 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 이벤트 리스너 (터치, 클릭, 컨텍스트 메뉴) - 변경 없음
     document.addEventListener('touchstart', function(e) {
-        if (isLocked && !e.target.closest('.modal') && !e.target.closest('#mainPlaylistSelect')) { // 재생목록 선택은 허용
+        if (isLocked && !e.target.closest('.modal')) { 
             e.preventDefault();
             e.stopPropagation();
         }
     }, { passive: false });
     
     document.addEventListener('click', function(e) {
-        // mainPlaylistSelect 클릭 허용을 위해 조건 수정 필요 없음 (기본 동작)
-        if (isLocked && !e.target.closest('.modal') && !e.target.closest('.unlock-trigger') && !e.target.closest('#mainPlaylistSelectContainer')) {
+        if (isLocked && !e.target.closest('.modal') && !e.target.closest('.unlock-trigger')) {
             e.preventDefault();
             e.stopPropagation();
         }
-    }, { capture: true }); // capture true로 하여 재생목록 드롭다운 상호작용 전 차단
+    }, { capture: true }); 
 
     document.addEventListener('contextmenu', function(e) {
         if (isLocked) {
@@ -131,7 +135,15 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error("Unlock trigger not found!");
     }
     
-    loadPlaylistsForMainSelector(); // 페이지 로드 시 재생목록 로드
+    // loadPlaylistsForMainSelector(); // 재생목록 로직 제거
+    // 페이지 로드 시 기본 비디오 ID로 플레이어 초기화 시도
+    currentVideoId = DEFAULT_VIDEO_ID; // 기본 비디오 ID 설정
+    initialVideoIdToLoad = currentVideoId;
+    if (youtubeApiReady && domReady) { // DOM과 API 모두 준비 시
+        initializePlayer(currentVideoId);
+        initialVideoIdToLoad = null;
+    }
+    
     checkUnlockStatus(); // 잠금 상태 확인 및 UI 업데이트
 
     // 새 컨트롤에 대한 이벤트 리스너 (예시)
@@ -248,98 +260,6 @@ function checkUnlockStatus() {
         hideControlsPostUnlock();
     }
     console.log("Checked unlock status. isLocked:", isLocked);
-}
-
-async function loadPlaylistsForMainSelector() {
-    console.log("Loading playlists for main selector...");
-    try {
-        const response = await fetch('/api/playlists');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const playlists = await response.json();
-        console.log("Playlists fetched:", playlists);
-        
-        const selectElement = document.getElementById('mainPlaylistSelect');
-        if (!selectElement) {
-            console.error('Main playlist select element not found');
-            return;
-        }
-        selectElement.innerHTML = ''; // 기존 옵션 초기화
-
-        if (playlists && playlists.length > 0) {
-            playlists.forEach(playlist => {
-                const option = document.createElement('option');
-                option.value = playlist.youtube_id;
-                option.textContent = playlist.title;
-                selectElement.appendChild(option);
-            });
-            
-            if (!currentPlaylistId && playlists[0]) {
-                currentPlaylistId = playlists[0].youtube_id;
-                selectElement.value = currentPlaylistId; // Select 드롭다운 값도 설정
-                console.log("Default playlist ID set to:", currentPlaylistId);
-                initialPlaylistIdToLoad = currentPlaylistId; 
-                if (youtubeApiReady) { 
-                    console.log("API was already ready, initializing player now for default playlist.");
-                    initializePlayer(currentPlaylistId);
-                    initialPlaylistIdToLoad = null;
-                }
-            } else if (currentPlaylistId) {
-                 selectElement.value = currentPlaylistId;
-                 console.log("Retained currentPlaylistId:", currentPlaylistId);
-                 initialPlaylistIdToLoad = currentPlaylistId;
-                 if (youtubeApiReady && !player) { 
-                     console.log("API ready and no player, initializing with retained playlist ID.");
-                     initializePlayer(currentPlaylistId);
-                     initialPlaylistIdToLoad = null;
-                 }
-            } else {
-                 console.log("No playlists to set as default or retain.");
-            }
-
-            selectElement.removeEventListener('change', handleMainPlaylistSelection); // 기존 리스너 제거
-            selectElement.addEventListener('change', handleMainPlaylistSelection);
-            console.log("Playlist selector populated and event listener attached.");
-        } else {
-            console.log('No playlists received or empty playlist array.');
-            // 재생목록이 없을 경우의 처리 (예: 메시지 표시)
-            if (player) player.destroy(); // 플레이어 중지 또는 제거
-            const playerDiv = document.getElementById('player');
-            if(playerDiv) playerDiv.innerHTML = '<p>재생목록을 불러올 수 없습니다. 관리자 페이지에서 재생목록을 추가해주세요.</p>';
-        }
-    } catch (error) {
-        console.error('Error fetching playlists:', error);
-        const playerDiv = document.getElementById('player');
-        if(playerDiv) playerDiv.innerHTML = '<p>재생목록 로딩 중 오류가 발생했습니다.</p>';
-    }
-}
-
-function handleMainPlaylistSelection() {
-    const selectElement = document.getElementById('mainPlaylistSelect');
-    if (!selectElement) return;
-    currentPlaylistId = selectElement.value;
-    console.log("Playlist selection changed to:", currentPlaylistId);
-    
-    if (player && player.loadPlaylist) {
-        console.log("Loading new playlist into existing player.");
-        player.loadPlaylist({
-            listType: 'playlist',
-            list: currentPlaylistId
-        });
-    } else {
-        console.log("No player, or player cannot load playlist. Initializing new player.");
-        initializePlayer(currentPlaylistId); // 플레이어가 없으면 초기화
-    }
-    // 재생목록 변경 시 자동으로 앱 잠금 (사용자 요청 사항)
-    // lockApp(); // 바로 잠그면 UI가 이상할 수 있으니, 사용자가 영상을 보기 시작하면 잠기는 형태로 고려
-    // 여기서는 isLocked 상태를 true로 설정하고, 관리자 컨트롤을 숨기는 것을 의미.
-    // 실제 '잠금' 화면 오버레이 등을 즉시 활성화 하지는 않음.
-    if (!isLocked) { // 만약 잠금 해제 상태였다면, 다시 잠금 상태로 (컨트롤 숨김)
-        isLocked = true; // 내부 상태만 잠금으로 변경
-        localStorage.setItem('appUnlocked', 'false'); // 로컬 스토리지도 업데이트
-        hideControlsPostUnlock(); // 관리자용 컨트롤 숨김
-    }
 }
 
 function openSettingsPage() {
