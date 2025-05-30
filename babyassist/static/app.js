@@ -64,8 +64,7 @@ function initializePlayer(videoId) {
             'rel': 0,
             'showinfo': 0,
             'loop': 1, 
-            'playlist': videoId, 
-            'origin': currentAppOrigin
+            'playlist': videoId
         },
         events: {
             'onReady': onPlayerReady,
