@@ -20,7 +20,7 @@
                 { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
                 {
                     "key": "Content-Security-Policy",
-                    "value": "frame-src https://www.youtube.com https://googleads.g.doubleclick.net https://*.adtrafficquality.google.com https://www.google.com;"
+                    "value": "frame-src 'self' https://www.youtube.com https://googleads.g.doubleclick.net https://ep2.adtrafficquality.google.com https://*.google.com; child-src 'self' https://www.youtube.com https://googleads.g.doubleclick.net https://ep2.adtrafficquality.google.com https://*.google.com;"
                 }
             ]
         }
