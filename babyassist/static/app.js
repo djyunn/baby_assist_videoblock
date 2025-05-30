@@ -27,7 +27,8 @@ function initializePlayer(playlistId) {
             'showinfo': 0,
             'loop': 1,
             'listType': 'playlist',
-            'list': playlistId
+            'list': playlistId,
+            'origin': window.location.origin
         },
         events: {
             'onReady': onPlayerReady,
