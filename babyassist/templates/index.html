@@ -1,0 +1,100 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-fullscreen">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Baby Video Player</title>
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div id="app">
+        <!-- Lock overlay -->
+        <div id="lockOverlay" class="lock-overlay">
+            <div class="video-container">
+                <div id="player"></div>
+            </div>
+            
+            <!-- Hidden unlock button (tap and hold) -->
+            <div id="unlockTrigger" class="unlock-trigger"></div>
+        </div>
+
+        <!-- Unlock modal -->
+        <div id="unlockModal" class="modal hidden">
+            <div class="modal-content">
+                <h2>어른 인증</h2>
+                <input type="password" id="passwordInput" placeholder="비밀번호 입력">
+                <div class="modal-buttons">
+                    <button onclick="attemptUnlock()">잠금 해제</button>
+                    <button onclick="closeUnlockModal()">취소</button>
+                </div>
+                <div id="errorMessage" class="error hidden"></div>
+            </div>
+        </div>
+
+        <!-- Admin panel (hidden by default) -->
+        <div id="adminPanel" class="admin-panel hidden">
+            <h2>관리자 패널</h2>
+            <div class="playlist-selector">
+                <label>재생목록 선택:</label>
+                <select id="playlistSelect" onchange="changePlaylist()">
+                    {% for playlist in playlists %}
+                    <option value="{{ playlist.youtube_id }}">{{ playlist.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button onclick="lockApp()" class="lock-button">앱 잠그기</button>
+            <button onclick="openSettings()" class="settings-button">설정</button>
+        </div>
+    </div>
+
+    <!-- 광고 스크립트 (예: Google AdSense) -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-YOUR-ID" crossorigin="anonymous"></script>
+    
+    <!-- PWA 설치 버튼 -->
+    <div id="pwaInstallBanner" class="pwa-install-banner hidden">
+        <span>홈 화면에 Baby Video Player 추가하기</span>
+        <button id="pwaInstallBtn">설치</button>
+        <button id="pwaCloseBtn">×</button>
+    </div>
+
+    <!-- YouTube API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+    
+    <!-- PWA Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/static/sw.js')
+                .then(registration => console.log('SW registered'))
+                .catch(error => console.log('SW registration failed'));
+        }
+        
+        // PWA 설치 프롬프트
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('pwaInstallBanner').classList.remove('hidden');
+        });
+        
+        document.getElementById('pwaInstallBtn').addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                deferredPrompt = null;
+                document.getElementById('pwaInstallBanner').classList.add('hidden');
+            }
+        });
+        
+        document.getElementById('pwaCloseBtn').addEventListener('click', () => {
+            document.getElementById('pwaInstallBanner').classList.add('hidden');
+        });
+    </script>
+</body>
+</html>

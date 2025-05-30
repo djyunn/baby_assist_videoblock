@@ -1,0 +1,49 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>잠금 해제</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="unlock-container">
+        <h1>관리자 인증</h1>
+        <form onsubmit="unlock(event)">
+            <input type="password" id="password" placeholder="비밀번호 입력" required>
+            <button type="submit">잠금 해제</button>
+        </form>
+        <div id="error" class="error hidden"></div>
+        <a href="/" class="back-link">메인으로 돌아가기</a>
+    </div>
+
+    <script>
+        async function unlock(event) {
+            event.preventDefault();
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch('/api/unlock', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ password })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    window.location.href = '/admin';
+                } else {
+                    document.getElementById('error').textContent = '잘못된 비밀번호입니다.';
+                    document.getElementById('error').classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+    </script>
+</body>
+</html>

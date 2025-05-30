@@ -1,0 +1,50 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 설정</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="admin-container">
+        <h1>Baby Video Player 설정</h1>
+        
+        <div class="db-status">
+            {% if supabase_connected %}
+                <span class="status-connected">✅ Supabase 연결됨</span>
+            {% else %}
+                <span class="status-disconnected">⚠️ 로컬 저장소 사용 중</span>
+            {% endif %}
+        </div>
+        
+        <div class="section">
+            <h2>재생목록 관리</h2>
+            <div class="playlist-list">
+                {% for playlist in playlists %}
+                <div class="playlist-item">
+                    <h3>{{ playlist.title }}</h3>
+                    <p>{{ playlist.description }}</p>
+                    <button onclick="deletePlaylist({{ playlist.id }})" class="delete-btn">삭제</button>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="add-playlist">
+                <h3>새 재생목록 추가</h3>
+                <input type="text" id="playlistTitle" placeholder="재생목록 제목">
+                <input type="text" id="playlistId" placeholder="YouTube 재생목록 ID">
+                <input type="text" id="playlistDescription" placeholder="설명 (선택사항)">
+                <button onclick="addPlaylist()">추가</button>
+            </div>
+        </div>
+        
+        <div class="section">
+            <button onclick="goBack()" class="back-btn">메인으로 돌아가기</button>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='admin.js') }}"></script>
+</body>
+</html>

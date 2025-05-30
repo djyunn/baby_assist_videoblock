@@ -1,0 +1,24 @@
+
+{
+  "name": "Baby Video Player",
+  "short_name": "BabyPlayer",
+  "description": "아기용 안전한 YouTube 플레이어",
+  "start_url": "/",
+  "display": "fullscreen",
+  "background_color": "#ffffff",
+  "theme_color": "#4CAF50",
+  "orientation": "landscape",
+  "icons": [
+    {
+      "src": "/static/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["entertainment", "kids"]
+}
