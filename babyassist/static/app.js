@@ -8,8 +8,22 @@ let youtubeApiReady = false;
 let domReady = false;
 let initialPlaylistIdToLoad = null;
 
-// YouTube API ready callback
+// YouTube API 스크립트를 동적으로 로드하는 함수
+function loadYouTubeAPI() {
+    console.log("Attempting to load YouTube API script...");
+    var tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    var firstScriptTag = document.getElementsByTagName('script')[0];
+    // app.js 스크립트 이전에 삽입하거나, 없으면 body에 추가
+    if (firstScriptTag && firstScriptTag.parentNode) {
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    } else {
+        (document.head || document.body).appendChild(tag);
+    }
+}
+
 function onYouTubeIframeAPIReady() {
+    console.log("onYouTubeIframeAPIReady function was CALLED!");
     youtubeApiReady = true;
     console.log("YouTube API is ready.");
     if (domReady && initialPlaylistIdToLoad) {
@@ -17,7 +31,6 @@ function onYouTubeIframeAPIReady() {
         initializePlayer(initialPlaylistIdToLoad);
         initialPlaylistIdToLoad = null; 
     } else if (domReady && !player && currentPlaylistId) {
-        // DOM은 준비되었지만 API가 늦게 준비되었고, currentPlaylistId가 이미 설정된 경우 (예: handleMainPlaylistSelection에서)
         console.log("DOM ready, API now ready, currentPlaylistId exists. Initializing player.");
         initializePlayer(currentPlaylistId);
     } else {
@@ -81,6 +94,9 @@ function setVolume(volume) {
 document.addEventListener('DOMContentLoaded', function() {
     domReady = true;
     console.log("DOM content loaded.");
+    
+    loadYouTubeAPI(); // DOM이 준비되면 YouTube API 로드 시작
+
     const unlockTrigger = document.getElementById('unlockTrigger');
     
     // 이벤트 리스너 (터치, 클릭, 컨텍스트 메뉴) - 변경 없음
