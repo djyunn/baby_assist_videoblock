@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 # 환경변수 로드
 load_dotenv()
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='templates', static_folder='static')
 app.secret_key = os.getenv('SECRET_KEY', 'your-secret-key-change-this')
 
 # Supabase 설정
@@ -166,9 +166,8 @@ def delete_playlist(playlist_id):
 def manifest():
     return app.send_static_file('manifest.json')
 
-if __name__ == '__main__':
-    # 디렉토리 생성
-    os.makedirs('templates', exist_ok=True)
-    os.makedirs('static', exist_ok=True)
-    # 개발 환경에서만 debug=True 사용
-    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))
+# Vercel은 app 객체를 직접 사용합니다.
+# if __name__ == '__main__':
+#     os.makedirs('templates', exist_ok=True) # 로컬 실행 시 필요
+#     os.makedirs('static', exist_ok=True)   # 로컬 실행 시 필요
+#     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))
