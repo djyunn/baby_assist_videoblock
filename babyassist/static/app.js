@@ -34,7 +34,8 @@ function initializePlayer(playlistId) {
     if (player) {
         player.destroy();
     }
-    console.log(`Initializing player with playlist: ${playlistId} and origin: ${window.location.origin}`);
+    const currentAppOrigin = 'https://baby-assist-videoblock.vercel.app'; // 하드코딩된 origin
+    console.log(`Initializing player with playlist: ${playlistId} and origin: ${currentAppOrigin}`);
     player = new YT.Player('player', {
         height: '100%',
         width: '100%',
@@ -50,7 +51,7 @@ function initializePlayer(playlistId) {
             'loop': 1,
             'listType': 'playlist',
             'list': playlistId,
-            'origin': window.location.origin
+            'origin': currentAppOrigin // 하드코딩된 값 사용
         },
         events: {
             'onReady': onPlayerReady,
