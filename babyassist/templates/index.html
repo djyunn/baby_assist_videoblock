@@ -156,7 +156,7 @@
     
     <!-- YouTube API -->
     <script src="https://www.youtube.com/iframe_api"></script>
-    <script src="{{ url_for('static', filename='app.js') }}"></script>
+    <script src="{{ url_for('static', filename='app.js') }}?v={{ now() }}"></script>
     
     <!-- PWA Service Worker and Install Prompt Logic -->
     <script>

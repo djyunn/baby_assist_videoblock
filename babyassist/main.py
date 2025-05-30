@@ -79,6 +79,13 @@ def delete_playlist_from_db(playlist_id):
             return False
     return False
 
+# 템플릿 컨텍스트에 now 함수 추가
+@app.context_processor
+def utility_processor():
+    def get_current_time():
+        return datetime.now().strftime('%Y%m%d%H%M%S')
+    return dict(now=get_current_time)
+
 @app.route('/')
 def index():
     playlists = get_playlists()
