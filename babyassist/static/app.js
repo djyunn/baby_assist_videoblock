@@ -48,8 +48,7 @@ function initializePlayer(videoId) {
     if (player) {
         player.destroy();
     }
-    const currentAppOrigin = 'https://baby-assist-videoblock.vercel.app'; // 하드코딩된 origin
-    console.log(`Initializing player with videoId: ${videoId} and origin: ${currentAppOrigin}`);
+    console.log(`Initializing player with videoId: ${videoId}`);
     player = new YT.Player('player', {
         height: '100%',
         width: '100%',
