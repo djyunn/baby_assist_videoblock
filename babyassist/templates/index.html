@@ -32,7 +32,7 @@
             padding-top: 60px; /* PWA 배너 높이만큼 패딩 추가 */
         }
         /* 재생목록 선택기 스타일 */
-        #mainPlaylistSelectContainer {
+        #mainVideoSelectContainer {
             position: fixed;
             top: 70px; /* PWA 배너 아래 */
             left: 50%;
@@ -43,7 +43,7 @@
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        #mainPlaylistSelectContainer label {
+        #mainVideoSelectContainer label {
             margin-right: 10px;
         }
         /* 잠금 해제 후 컨트롤 버튼 스타일 */
@@ -105,15 +105,13 @@
             <div id="unlockTrigger" class="unlock-trigger"></div>
         </div>
 
-        <!-- 메인 재생목록 선택 제거 또는 주석 처리 -->
-        <!-- 
-        <div id="mainPlaylistSelectContainer">
-            <label for="mainPlaylistSelect">재생목록 선택:</label>
-            <select id="mainPlaylistSelect">
+        <!-- 메인 비디오 선택 (ID 및 라벨 변경) -->
+        <div id="mainVideoSelectContainer">
+            <label for="mainVideoSelect">동영상 선택:</label>
+            <select id="mainVideoSelect">
                 <!-- JavaScript로 채워짐 -->
             </select>
         </div>
-        -->
 
         <!-- Unlock modal -->
         <div id="unlockModal" class="modal hidden">

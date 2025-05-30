@@ -1,15 +1,13 @@
 let player;
 let isLocked = true;
 let unlockTimer = null;
-// let currentPlaylistId = ''; // 재생목록 ID 대신 단일 비디오 ID 사용
+let currentVideoId = ''; // 현재 재생 중인 비디오 ID
 const DEFAULT_VIDEO_ID = 'dQw4w9WgXcQ'; // 여기에 원하는 유튜브 비디오 ID를 넣으세요.
-let currentVideoId = DEFAULT_VIDEO_ID;
 const LOCK_DURATION = 5000; // 5초 잠금 해제 홀드 시간
 
 let youtubeApiReady = false;
 let domReady = false;
-// let initialPlaylistIdToLoad = null; // 단일 비디오용으로 변경
-let initialVideoIdToLoad = null;
+let initialVideoIdToLoad = null; // 초기에 로드할 비디오 ID
 
 // YouTube API 스크립트를 동적으로 로드하는 함수
 function loadYouTubeAPI() {
@@ -55,7 +53,7 @@ function initializePlayer(videoId) {
     player = new YT.Player('player', {
         height: '100%',
         width: '100%',
-        videoId: videoId, // playlist 관련 옵션 대신 videoId 사용
+        videoId: videoId, 
         playerVars: {
             'autoplay': 1,
             'controls': 0,
@@ -65,8 +63,8 @@ function initializePlayer(videoId) {
             'modestbranding': 1,
             'rel': 0,
             'showinfo': 0,
-            'loop': 1, // 단일 영상 반복을 위해서는 playlist 플레이어 변수 추가 필요
-            'playlist': videoId, // 단일 영상 반복을 위해 videoId를 playlist 파라미터에도 전달
+            'loop': 1, 
+            'playlist': videoId, 
             'origin': currentAppOrigin
         },
         events: {
@@ -104,16 +102,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const unlockTrigger = document.getElementById('unlockTrigger');
     
-    // 이벤트 리스너 (터치, 클릭, 컨텍스트 메뉴) - 변경 없음
     document.addEventListener('touchstart', function(e) {
-        if (isLocked && !e.target.closest('.modal')) { 
+        if (isLocked && !e.target.closest('.modal') && !e.target.closest('#mainVideoSelect')) { // 비디오 선택 허용
             e.preventDefault();
             e.stopPropagation();
         }
     }, { passive: false });
     
     document.addEventListener('click', function(e) {
-        if (isLocked && !e.target.closest('.modal') && !e.target.closest('.unlock-trigger')) {
+        if (isLocked && !e.target.closest('.modal') && !e.target.closest('.unlock-trigger') && !e.target.closest('#mainVideoSelectContainer')) {
             e.preventDefault();
             e.stopPropagation();
         }
@@ -135,16 +132,8 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error("Unlock trigger not found!");
     }
     
-    // loadPlaylistsForMainSelector(); // 재생목록 로직 제거
-    // 페이지 로드 시 기본 비디오 ID로 플레이어 초기화 시도
-    currentVideoId = DEFAULT_VIDEO_ID; // 기본 비디오 ID 설정
-    initialVideoIdToLoad = currentVideoId;
-    if (youtubeApiReady && domReady) { // DOM과 API 모두 준비 시
-        initializePlayer(currentVideoId);
-        initialVideoIdToLoad = null;
-    }
-    
-    checkUnlockStatus(); // 잠금 상태 확인 및 UI 업데이트
+    loadVideosForMainSelector(); // 함수명 변경 및 호출
+    checkUnlockStatus(); 
 
     // 새 컨트롤에 대한 이벤트 리스너 (예시)
     const relockButton = document.getElementById('relockButton');
@@ -305,3 +294,90 @@ document.addEventListener('keydown', function(e) {
 // PWA 설치 버튼 로직은 index.html에 있으므로 여기서는 특별히 처리할 필요 없음.
 // 다만, PWA 설치 배너 관련 DOM 요소 ID가 정확한지 확인 필요.
 // ('pwaInstallBanner', 'pwaInstallBtn', 'pwaCloseBtn')
+
+async function loadVideosForMainSelector() { // 함수명 변경: loadPlaylistsForMainSelector -> loadVideosForMainSelector
+    console.log("Loading videos for main selector...");
+    try {
+        // API 엔드포인트는 /api/playlists를 그대로 사용한다고 가정 (Supabase에서 단일 video id를 youtube_id 필드에 저장)
+        const response = await fetch('/api/playlists'); 
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const videos = await response.json(); // 변수명 videos로 변경
+        console.log("Videos fetched:", videos);
+        
+        const selectElement = document.getElementById('mainVideoSelect'); // ID 변경: mainPlaylistSelect -> mainVideoSelect
+        if (!selectElement) {
+            console.error('Main video select element not found');
+            return;
+        }
+        selectElement.innerHTML = ''; 
+
+        if (videos && videos.length > 0) {
+            videos.forEach(video => {
+                const option = document.createElement('option');
+                option.value = video.youtube_id; // youtube_id 필드 사용 가정
+                option.textContent = video.title;    // title 필드 사용 가정
+                selectElement.appendChild(option);
+            });
+            
+            if (!currentVideoId && videos[0]) {
+                currentVideoId = videos[0].youtube_id;
+                selectElement.value = currentVideoId; 
+                console.log("Default video ID set to:", currentVideoId);
+                initialVideoIdToLoad = currentVideoId; 
+                if (youtubeApiReady) { 
+                    console.log("API was already ready, initializing player now for default video.");
+                    initializePlayer(currentVideoId);
+                    initialVideoIdToLoad = null;
+                }
+            } else if (currentVideoId) {
+                 selectElement.value = currentVideoId;
+                 console.log("Retained currentVideoId:", currentVideoId);
+                 initialVideoIdToLoad = currentVideoId;
+                 if (youtubeApiReady && !player) { 
+                     console.log("API ready and no player, initializing with retained video ID.");
+                     initializePlayer(currentVideoId);
+                     initialVideoIdToLoad = null;
+                 }
+            } else {
+                 console.log("No videos to set as default or retain.");
+            }
+
+            selectElement.removeEventListener('change', handleVideoSelection); // 함수명 변경
+            selectElement.addEventListener('change', handleVideoSelection);   // 함수명 변경
+            console.log("Video selector populated and event listener attached.");
+        } else {
+            console.log('No videos received or empty video array.');
+            if (player) player.destroy(); 
+            const playerDiv = document.getElementById('player');
+            if(playerDiv) playerDiv.innerHTML = '<p>동영상을 불러올 수 없습니다. 관리자 페이지에서 동영상을 추가해주세요.</p>'; // 메시지 변경
+        }
+    } catch (error) {
+        console.error('Error fetching videos:', error); // 메시지 변경
+        const playerDiv = document.getElementById('player');
+        if(playerDiv) playerDiv.innerHTML = '<p>동영상 로딩 중 오류가 발생했습니다.</p>'; // 메시지 변경
+    }
+}
+
+function handleVideoSelection() { // 함수명 변경: handleMainPlaylistSelection -> handleVideoSelection
+    const selectElement = document.getElementById('mainVideoSelect'); // ID 변경
+    if (!selectElement) return;
+    currentVideoId = selectElement.value;
+    console.log("Video selection changed to:", currentVideoId);
+    
+    // 플레이어가 이미 있으면 videoId만 변경, 없으면 새로 초기화
+    if (player && player.loadVideoById) { // loadPlaylist 대신 loadVideoById 사용 (또는 그냥 새로 init)
+        console.log("Loading new video into existing player.");
+        player.loadVideoById(currentVideoId);
+    } else {
+        console.log("No player, or player cannot load video by ID. Initializing new player.");
+        initializePlayer(currentVideoId); 
+    }
+    if (!isLocked) { 
+        isLocked = true; 
+        localStorage.setItem('appUnlocked', 'false'); 
+        hideControlsPostUnlock(); 
+        console.log("Video changed, app re-locked (controls hidden).");
+    }
+}
