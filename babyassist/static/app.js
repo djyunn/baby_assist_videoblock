@@ -1,11 +1,18 @@
-
 let player;
 let isLocked = true;
 let unlockTimer = null;
-let currentPlaylistId = 'PLrAXtmRdnEQy4Qns2mwJNzQiJbmKuOQzP'; // Default playlist
+let currentPlaylistId = ''; // 기본값은 첫 번째 로드된 재생목록으로 설정됨
+const LOCK_DURATION = 5000; // 5초 잠금 해제 홀드 시간
 
 // YouTube API ready callback
 function onYouTubeIframeAPIReady() {
+    // 플레이어 초기화는 재생목록이 로드된 후 실행
+}
+
+function initializePlayer(playlistId) {
+    if (player) {
+        player.destroy();
+    }
     player = new YT.Player('player', {
         height: '100%',
         width: '100%',
@@ -20,7 +27,7 @@ function onYouTubeIframeAPIReady() {
             'showinfo': 0,
             'loop': 1,
             'listType': 'playlist',
-            'list': currentPlaylistId
+            'list': playlistId
         },
         events: {
             'onReady': onPlayerReady,
@@ -31,13 +38,12 @@ function onYouTubeIframeAPIReady() {
 
 function onPlayerReady(event) {
     event.target.playVideo();
-    setVolume(50); // Set moderate volume for babies
+    setVolume(50);
 }
 
 function onPlayerStateChange(event) {
-    // Auto-restart if video ends
     if (event.data == YT.PlayerState.ENDED) {
-        player.playVideo();
+        player.playVideo(); // 또는 player.loadPlaylist(currentPlaylistId); 로 다음 비디오로
     }
 }
 
@@ -47,47 +53,54 @@ function setVolume(volume) {
     }
 }
 
-// Lock functionality
 document.addEventListener('DOMContentLoaded', function() {
     const unlockTrigger = document.getElementById('unlockTrigger');
-    const unlockModal = document.getElementById('unlockModal');
-    const passwordInput = document.getElementById('passwordInput');
     
-    // Prevent all interactions when locked
+    // 이벤트 리스너 (터치, 클릭, 컨텍스트 메뉴) - 변경 없음
     document.addEventListener('touchstart', function(e) {
-        if (isLocked && !e.target.closest('.modal')) {
+        if (isLocked && !e.target.closest('.modal') && !e.target.closest('#mainPlaylistSelect')) { // 재생목록 선택은 허용
             e.preventDefault();
             e.stopPropagation();
         }
     }, { passive: false });
     
     document.addEventListener('click', function(e) {
-        if (isLocked && !e.target.closest('.modal') && !e.target.closest('.unlock-trigger')) {
+        // mainPlaylistSelect 클릭 허용을 위해 조건 수정 필요 없음 (기본 동작)
+        if (isLocked && !e.target.closest('.modal') && !e.target.closest('.unlock-trigger') && !e.target.closest('#mainPlaylistSelectContainer')) {
             e.preventDefault();
             e.stopPropagation();
         }
-    }, { passive: false });
-    
+    }, { capture: true }); // capture true로 하여 재생목록 드롭다운 상호작용 전 차단
+
     document.addEventListener('contextmenu', function(e) {
         if (isLocked) {
             e.preventDefault();
         }
     });
     
-    // Unlock trigger (long press)
     unlockTrigger.addEventListener('mousedown', startUnlockTimer);
     unlockTrigger.addEventListener('touchstart', startUnlockTimer);
     unlockTrigger.addEventListener('mouseup', cancelUnlockTimer);
     unlockTrigger.addEventListener('touchend', cancelUnlockTimer);
     unlockTrigger.addEventListener('mouseleave', cancelUnlockTimer);
     
-    // Check unlock status on load
-    checkUnlockStatus();
+    loadPlaylistsForMainSelector(); // 페이지 로드 시 재생목록 로드
+    checkUnlockStatus(); // 잠금 상태 확인 및 UI 업데이트
+
+    // 새 컨트롤에 대한 이벤트 리스너 (예시)
+    const relockButton = document.getElementById('relockButton');
+    if (relockButton) {
+        relockButton.addEventListener('click', lockApp);
+    }
+    const goToSettingsButton = document.getElementById('goToSettingsButton');
+    if (goToSettingsButton) {
+        goToSettingsButton.addEventListener('click', openSettingsPage);
+    }
 });
 
 function startUnlockTimer(e) {
     e.preventDefault();
-    unlockTimer = setTimeout(showUnlockModal, 3000); // 3 second hold
+    unlockTimer = setTimeout(showUnlockModal, LOCK_DURATION);
 }
 
 function cancelUnlockTimer() {
@@ -105,18 +118,18 @@ function showUnlockModal() {
 function closeUnlockModal() {
     document.getElementById('unlockModal').classList.add('hidden');
     document.getElementById('passwordInput').value = '';
-    document.getElementById('errorMessage').classList.add('hidden');
+    const errorMessageElement = document.getElementById('errorMessage');
+    if(errorMessageElement) errorMessageElement.classList.add('hidden');
 }
 
 async function attemptUnlock() {
     const password = document.getElementById('passwordInput').value;
+    const errorMessageElement = document.getElementById('errorMessage');
     
     try {
         const response = await fetch('/api/unlock', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ password })
         });
         
@@ -124,79 +137,157 @@ async function attemptUnlock() {
         
         if (result.success) {
             isLocked = false;
+            localStorage.setItem('appUnlocked', 'true');
             closeUnlockModal();
-            showAdminPanel();
+            showControlsPostUnlock();
         } else {
-            document.getElementById('errorMessage').textContent = '잘못된 비밀번호입니다.';
-            document.getElementById('errorMessage').classList.remove('hidden');
+            if(errorMessageElement) {
+                errorMessageElement.textContent = result.error || '잘못된 비밀번호입니다.';
+                errorMessageElement.classList.remove('hidden');
+            }
         }
     } catch (error) {
-        console.error('Error:', error);
-        document.getElementById('errorMessage').textContent = '오류가 발생했습니다.';
-        document.getElementById('errorMessage').classList.remove('hidden');
+        console.error('Error unlocking:', error);
+        if(errorMessageElement) {
+            errorMessageElement.textContent = '오류가 발생했습니다.';
+            errorMessageElement.classList.remove('hidden');
+        }
     }
 }
 
 async function lockApp() {
+    // 서버에 알릴 필요가 있다면 /api/lock 호출 유지, 아니면 클라이언트에서만 처리
     try {
-        await fetch('/api/lock', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
-        
+        await fetch('/api/lock', { method: 'POST' }); // 서버 세션도 업데이트 (선택적)
+    } catch(e) { console.error("Error calling /api/lock:", e); }
+
+    isLocked = true;
+    localStorage.setItem('appUnlocked', 'false');
+    hideControlsPostUnlock();
+    // 플레이어가 있다면 화면 가리기 등 추가 작업 가능
+    console.log("App locked");
+}
+
+function showControlsPostUnlock() {
+    const postUnlockControls = document.getElementById('postUnlockControls');
+    if (postUnlockControls) {
+        postUnlockControls.classList.remove('hidden');
+    }
+    // 메인 재생목록 선택기는 항상 보이므로 여기서 제어할 필요 없음
+    // document.getElementById('mainPlaylistSelectContainer').classList.add('hidden'); // 잠금 해제 시 재생목록 선택 가리기 (선택적)
+}
+
+function hideControlsPostUnlock() {
+    const postUnlockControls = document.getElementById('postUnlockControls');
+    if (postUnlockControls) {
+        postUnlockControls.classList.add('hidden');
+    }
+    // document.getElementById('mainPlaylistSelectContainer').classList.remove('hidden'); // 잠금 시 재생목록 선택 다시 표시
+}
+
+function checkUnlockStatus() {
+    const storedUnlockStatus = localStorage.getItem('appUnlocked');
+    if (storedUnlockStatus === 'true') {
+        isLocked = false;
+        showControlsPostUnlock();
+    } else {
         isLocked = true;
-        hideAdminPanel();
-    } catch (error) {
-        console.error('Error:', error);
+        hideControlsPostUnlock();
     }
 }
 
-function showAdminPanel() {
-    document.getElementById('adminPanel').classList.remove('hidden');
-}
-
-function hideAdminPanel() {
-    document.getElementById('adminPanel').classList.add('hidden');
-}
-
-async function checkUnlockStatus() {
+async function loadPlaylistsForMainSelector() {
     try {
-        const response = await fetch('/api/is_unlocked');
-        const result = await response.json();
+        const response = await fetch('/api/playlists');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const playlists = await response.json();
         
-        isLocked = !result.unlocked;
-        
-        if (!isLocked) {
-            showAdminPanel();
+        const selectElement = document.getElementById('mainPlaylistSelect');
+        if (!selectElement) {
+            console.error('Main playlist select element not found');
+            return;
+        }
+        selectElement.innerHTML = ''; // 기존 옵션 초기화
+
+        if (playlists && playlists.length > 0) {
+            playlists.forEach(playlist => {
+                const option = document.createElement('option');
+                option.value = playlist.youtube_id;
+                option.textContent = playlist.title;
+                selectElement.appendChild(option);
+            });
+            
+            // 첫 번째 재생목록을 기본값으로 설정하고 플레이어 초기화
+            if (!currentPlaylistId && playlists[0]) {
+                currentPlaylistId = playlists[0].youtube_id;
+                selectElement.value = currentPlaylistId; // Select 드롭다운 값도 설정
+                initializePlayer(currentPlaylistId);
+            } else if (currentPlaylistId) { // 이미 currentPlaylistId가 있으면 (예: 페이지 새로고침) 해당 값으로 설정
+                 selectElement.value = currentPlaylistId;
+                 initializePlayer(currentPlaylistId); // 플레이어가 없다면 초기화
+            } else {
+                 console.log("No playlists to initialize player.");
+            }
+
+            selectElement.removeEventListener('change', handleMainPlaylistSelection); // 기존 리스너 제거
+            selectElement.addEventListener('change', handleMainPlaylistSelection);
+        } else {
+            console.log('No playlists received or empty playlist array.');
+            // 재생목록이 없을 경우의 처리 (예: 메시지 표시)
+            if (player) player.destroy(); // 플레이어 중지 또는 제거
+            document.getElementById('player').innerHTML = '<p>재생목록을 불러올 수 없습니다. 관리자 페이지에서 재생목록을 추가해주세요.</p>';
+
         }
     } catch (error) {
-        console.error('Error checking unlock status:', error);
+        console.error('Error fetching playlists:', error);
+        document.getElementById('player').innerHTML = '<p>재생목록 로딩 중 오류가 발생했습니다.</p>';
     }
 }
 
-function changePlaylist() {
-    const select = document.getElementById('playlistSelect');
-    currentPlaylistId = select.value;
+function handleMainPlaylistSelection() {
+    const selectElement = document.getElementById('mainPlaylistSelect');
+    currentPlaylistId = selectElement.value;
     
     if (player && player.loadPlaylist) {
         player.loadPlaylist({
             listType: 'playlist',
             list: currentPlaylistId
         });
+    } else {
+        initializePlayer(currentPlaylistId); // 플레이어가 없으면 초기화
+    }
+    // 재생목록 변경 시 자동으로 앱 잠금 (사용자 요청 사항)
+    // lockApp(); // 바로 잠그면 UI가 이상할 수 있으니, 사용자가 영상을 보기 시작하면 잠기는 형태로 고려
+    // 여기서는 isLocked 상태를 true로 설정하고, 관리자 컨트롤을 숨기는 것을 의미.
+    // 실제 '잠금' 화면 오버레이 등을 즉시 활성화 하지는 않음.
+    if (!isLocked) { // 만약 잠금 해제 상태였다면, 다시 잠금 상태로 (컨트롤 숨김)
+        isLocked = true; // 내부 상태만 잠금으로 변경
+        localStorage.setItem('appUnlocked', 'false'); // 로컬 스토리지도 업데이트
+        hideControlsPostUnlock(); // 관리자용 컨트롤 숨김
     }
 }
 
-function openSettings() {
-    window.location.href = '/admin';
+function openSettingsPage() {
+    // 이 함수는 '설정 페이지 가기' 버튼과 연결됨
+    // 이미 잠금 해제된 상태에서만 이 버튼이 보이므로, isLocked 체크는 불필요할 수 있음
+    if (!isLocked) {
+        window.location.href = '/admin';
+    } else {
+        // 만약을 위해 잠금 모달을 보여줄 수 있지만, 버튼 자체가 잠금 해제 시에만 보여야 함
+        showUnlockModal();
+    }
 }
 
-// Keyboard shortcuts (when unlocked)
+
+// Keyboard shortcuts (when unlocked) - 기존 코드 유지
 document.addEventListener('keydown', function(e) {
-    if (!isLocked) {
+    if (!isLocked) { // isLocked 상태에 따라 키보드 단축키 활성화/비활성화
+        if (!player || typeof player.getPlayerState !== 'function') return; // 플레이어 준비 안됐으면 종료
+
         switch(e.key) {
-            case ' ':
+            case ' ': // Spacebar
                 e.preventDefault();
                 if (player.getPlayerState() === YT.PlayerState.PLAYING) {
                     player.pauseVideo();
@@ -206,14 +297,18 @@ document.addEventListener('keydown', function(e) {
                 break;
             case 'ArrowUp':
                 e.preventDefault();
-                const currentVolume = player.getVolume();
-                setVolume(Math.min(100, currentVolume + 10));
+                const currentVolumeUp = player.getVolume();
+                setVolume(Math.min(100, currentVolumeUp + 10));
                 break;
             case 'ArrowDown':
                 e.preventDefault();
-                const currentVol = player.getVolume();
-                setVolume(Math.max(0, currentVol - 10));
+                const currentVolumeDown = player.getVolume();
+                setVolume(Math.max(0, currentVolumeDown - 10));
                 break;
         }
     }
 });
+
+// PWA 설치 버튼 로직은 index.html에 있으므로 여기서는 특별히 처리할 필요 없음.
+// 다만, PWA 설치 배너 관련 DOM 요소 ID가 정확한지 확인 필요.
+// ('pwaInstallBanner', 'pwaInstallBtn', 'pwaCloseBtn')
