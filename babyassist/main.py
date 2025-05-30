@@ -1,4 +1,3 @@
-
 from flask import Flask, render_template, request, jsonify, session
 import os
 from datetime import datetime
@@ -171,4 +170,5 @@ if __name__ == '__main__':
     # 디렉토리 생성
     os.makedirs('templates', exist_ok=True)
     os.makedirs('static', exist_ok=True)
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    # 개발 환경에서만 debug=True 사용
+    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))
