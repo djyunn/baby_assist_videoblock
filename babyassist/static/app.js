@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const unlockTrigger = document.getElementById('unlockTrigger');
     
     document.addEventListener('touchstart', function(e) {
-        if (isLocked && !e.target.closest('.modal') && !e.target.closest('#mainVideoSelect')) { // 비디오 선택 허용
+        if (isLocked && !e.target.closest('.modal') && !e.target.closest('#mainVideoSelect')) {
             e.preventDefault();
             e.stopPropagation();
         }
@@ -114,8 +114,8 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             e.stopPropagation();
         }
-    }, { capture: true }); 
-
+    }, { capture: true });
+    
     document.addEventListener('contextmenu', function(e) {
         if (isLocked) {
             e.preventDefault();
@@ -192,6 +192,7 @@ async function attemptUnlock() {
         if (result.success) {
             isLocked = false;
             localStorage.setItem('appUnlocked', 'true');
+            document.getElementById('lockOverlay').style.display = 'none';
             closeUnlockModal();
             showControlsPostUnlock();
         } else {
@@ -217,8 +218,8 @@ async function lockApp() {
 
     isLocked = true;
     localStorage.setItem('appUnlocked', 'false');
+    document.getElementById('lockOverlay').style.display = 'flex';
     hideControlsPostUnlock();
-    // 플레이어가 있다면 화면 가리기 등 추가 작업 가능
     console.log("App locked");
 }
 
@@ -241,11 +242,14 @@ function hideControlsPostUnlock() {
 
 function checkUnlockStatus() {
     const storedUnlockStatus = localStorage.getItem('appUnlocked');
+    const lockOverlay = document.getElementById('lockOverlay');
     if (storedUnlockStatus === 'true') {
         isLocked = false;
+        if(lockOverlay) lockOverlay.style.display = 'none';
         showControlsPostUnlock();
     } else {
         isLocked = true;
+        if(lockOverlay) lockOverlay.style.display = 'flex';
         hideControlsPostUnlock();
     }
     console.log("Checked unlock status. isLocked:", isLocked);
@@ -374,10 +378,11 @@ function handleVideoSelection() { // 함수명 변경: handleMainPlaylistSelecti
         console.log("No player, or player cannot load video by ID. Initializing new player.");
         initializePlayer(currentVideoId); 
     }
-    if (!isLocked) { 
-        isLocked = true; 
-        localStorage.setItem('appUnlocked', 'false'); 
-        hideControlsPostUnlock(); 
-        console.log("Video changed, app re-locked (controls hidden).");
-    }
+
+    // 비디오 변경 시 앱을 다시 잠금 상태로 만듭니다.
+    isLocked = true; 
+    localStorage.setItem('appUnlocked', 'false'); 
+    document.getElementById('lockOverlay').style.display = 'flex'; // 오버레이 표시
+    hideControlsPostUnlock(); 
+    console.log("Video changed, app re-locked (overlay shown, controls hidden).");
 }
