@@ -44,6 +44,7 @@ function initializePlayer(videoId) {
         console.log("YouTube API not ready yet. Player initialization deferred. Storing video ID: ", videoId);
         initialVideoIdToLoad = videoId; 
         return;
+        
     }
     if (player) {
         player.destroy();
