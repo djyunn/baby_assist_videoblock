@@ -42,6 +42,8 @@
             margin-left: 8px;
             font-size: 12px;
             white-space: nowrap;
+            display: flex;
+            align-items: center;
         }
         #pwaInstallBanner button:hover {
             background: #f0f0f0;
@@ -153,7 +155,7 @@
             더 나은 사용을 위해 앱으로 설치하세요!
         </span>
         <div class="button-group">
-            <button id="pwaInstallBtn">앱 설치하기</button>
+            <button id="pwaInstallBtn"><img src="{{ url_for('static', filename='favicon.ico') }}" alt="App Icon" style="width: 14px; height: 14px; margin-right: 4px; vertical-align: middle;">앱 설치하기</button>
             <button id="pwaCloseBtn">✕</button>
         </div>
     </div>
