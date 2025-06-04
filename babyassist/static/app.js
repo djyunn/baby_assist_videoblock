@@ -88,18 +88,15 @@ function onPlayerReady(event) {
     setVolume(50);
     
     // 플레이어가 준비되면 잠금 상태 확인 및 적용
-    // if (isLocked) {
-    //     const lockOverlay = document.getElementById('lockOverlay');
-    //     if(lockOverlay) {
-    //         lockOverlay.style.display = 'flex';
-    //         lockOverlay.classList.add('active');
-    //         // 확실하게 z-index 설정
-    //         lockOverlay.style.zIndex = '10000';
-    //     }
-    //     hideControlsPostUnlock();
     if (isLocked) {
-        document.getElementById('lockOverlay').classList.remove('hidden');
-            
+        const lockOverlay = document.getElementById('lockOverlay');
+        if(lockOverlay) {
+            lockOverlay.style.display = 'flex';
+            lockOverlay.classList.add('active');
+            // 확실하게 z-index 설정
+            lockOverlay.style.zIndex = '10000';
+        }
+        hideControlsPostUnlock();
         console.log("Player ready, ensuring app is locked.");
     }
 }
@@ -124,7 +121,17 @@ document.addEventListener('DOMContentLoaded', function() {
     
     loadYouTubeAPI();
 
+    // const unlockTrigger = document.getElementById('unlockTrigger');
     const unlockTrigger = document.getElementById('unlockTrigger');
+    if (unlockTrigger) {
+        unlockTrigger.addEventListener('mousedown', startUnlockTimer);
+        unlockTrigger.addEventListener('touchstart', startUnlockTimer);
+        unlockTrigger.addEventListener('mouseup', cancelUnlockTimer);
+        unlockTrigger.addEventListener('touchend', cancelUnlockTimer);
+        unlockTrigger.addEventListener('mouseleave', cancelUnlockTimer);
+    } else {
+        console.error("Unlock trigger not found!");
+    }
     
     // PWA 배너 버튼 클릭 허용
     document.addEventListener('touchstart', function(e) {
@@ -147,22 +154,7 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
         }
     });
-    document.addEventListener('touchmove', function(e) {
-        if (isLocked) {
-            e.preventDefault();
-        }
-    }, { passive: false });
     
-    document.addEventListener('touchend', function(e) {
-        if (isLocked) {
-            e.preventDefault();
-        }
-    }, { passive: false });
-    
-    // 잠금 해제 트리거 처리
-    document.getElementById('unlockTrigger').addEventListener('click', function() {
-        showUnlockModal();
-    });
     if (unlockTrigger) {
         unlockTrigger.addEventListener('mousedown', startUnlockTimer);
         unlockTrigger.addEventListener('touchstart', startUnlockTimer);
@@ -178,13 +170,41 @@ document.addEventListener('DOMContentLoaded', function() {
     // 첫 화면에서 잠금 해제 상태로 시작
     isLocked = false;
     localStorage.setItem('appUnlocked', 'true');
+    // const lockOverlay = document.getElementById('lockOverlay');
+    // if(lockOverlay) {
+    //     lockOverlay.style.display = 'none';
+    //     lockOverlay.classList.remove('active');
+    // }
+    // showControlsPostUnlock();
+
+    // 투명 오버레이로 터치 차단
     const lockOverlay = document.getElementById('lockOverlay');
-    if(lockOverlay) {
-        lockOverlay.style.display = 'none';
-        lockOverlay.classList.remove('active');
+    if (lockOverlay) {
+        lockOverlay.addEventListener('touchstart', (e) => {
+            if (isLocked && !e.target.closest('#unlockTrigger') && !e.target.closest('#pwaInstallBanner')) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        }, { passive: false });
+        lockOverlay.addEventListener('touchmove', (e) => {
+            if (isLocked) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        }, { passive: false });
+        lockOverlay.addEventListener('touchend', (e) => {
+            if (isLocked) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        }, { passive: false });
+        lockOverlay.addEventListener('click', (e) => {
+            if (isLocked && !e.target.closest('#unlockTrigger') && !e.target.closest('#pwaInstallBanner')) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        }, true);
     }
-    showControlsPostUnlock();
-    
     const relockButton = document.getElementById('relockButton');
     if (relockButton) {
         relockButton.addEventListener('click', lockApp);
