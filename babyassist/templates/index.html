@@ -19,7 +19,7 @@
             width: 100%;
             background-color: #4CAF50;
             color: white;
-            padding: 15px;
+            padding: 10px;
             text-align: center;
             z-index: 1000;
             display: flex;
@@ -34,11 +34,12 @@
             background: white;
             color: #4CAF50;
             border: none;
-            padding: 8px 15px;
+            padding: 6px 12px;
             border-radius: 5px;
             cursor: pointer;
             font-weight: bold;
             margin-left: 10px;
+            font-size: 14px;
         }
         #pwaInstallBanner button:hover {
             background: #f0f0f0;
@@ -54,12 +55,12 @@
             align-items: center;
         }
         #app {
-            padding-top: 60px;
+            padding-top: 40px;
         }
         /* 재생목록 선택기 스타일 */
         #mainVideoSelectContainer {
             position: fixed;
-            top: 70px;
+            top: 50px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 999;
@@ -98,14 +99,15 @@
             display: flex;
             gap: 10px;
         }
-         /* 전체 화면 비디오 컨테이너 */
+        /* 전체 화면 비디오 컨테이너 */
         .video-container {
-            position: fixed; /* 변경: absolute -> fixed */
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             background-color: #000;
+            z-index: 1;
         }
         #player {
             width: 100%;
@@ -113,20 +115,39 @@
         }
         /* 잠금 해제 트리거 위치 우측 상단으로 */
         .unlock-trigger {
-            position: fixed; /* 변경: absolute -> fixed */
+            position: fixed;
             top: 10px;
             right: 10px;
-            width: 50px; /* 크기 명확히 */
-            height: 50px; /* 크기 명확히 */
-            /* background-color: rgba(255,0,0,0.3); */ /* 테스트용 시각화 */
-            z-index: 1001; /* 다른 요소들 위에 오도록 */
+            width: 50px;
+            height: 50px;
+            z-index: 1001;
+        }
+        /* Lock overlay 수정 */
+        .lock-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: transparent;
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+        }
+        .lock-overlay.active {
+            pointer-events: all;
         }
     </style>
 </head>
 <body>
     <!-- PWA 설치 버튼 -->
     <div id="pwaInstallBanner" class="pwa-install-banner">
-        <span>더 나은 사용을 위해 앱으로 설치하세요!</span>
+        <span>
+            <img src="{{ url_for('static', filename='favicon.ico') }}" alt="App Icon" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 8px;">
+            더 나은 사용을 위해 앱으로 설치하세요!
+        </span>
         <div class="button-group">
             <button id="pwaInstallBtn">앱 설치하기</button>
             <button id="pwaCloseBtn">✕</button>

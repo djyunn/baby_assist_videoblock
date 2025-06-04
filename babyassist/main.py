@@ -116,7 +116,7 @@ def admin():
     # Vercel 환경에서는 세션이 안정적이지 않을 수 있으므로, is_unlocked API를 호출하여 확인
     # 또는, admin 페이지 접근 시 항상 비밀번호를 다시 입력받는 방식으로 변경 고려
     # 여기서는 단순화를 위해 세션에 의존하는 현재 로직을 유지하되, 클라이언트 측에서 unlock 상태를 관리해야 함을 주지합니다.
-    if not session.get('unlocked', False): 
+    if not session.get('unlocked', False):
         return render_template('unlock.html')
     playlists = get_playlists()
     return render_template('admin.html', playlists=playlists, supabase_connected=supabase is not None)

@@ -66,7 +66,7 @@ function initializePlayer(videoId) {
             'modestbranding': 1,
             'rel': 0,
             'showinfo': 0,
-            'loop': 1, 
+            'loop': 1,
             'playlist': videoId,
             'origin': currentOrigin,
             'host': currentOrigin,
@@ -131,11 +131,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     if (unlockTrigger) {
-        unlockTrigger.addEventListener('mousedown', startUnlockTimer);
-        unlockTrigger.addEventListener('touchstart', startUnlockTimer);
-        unlockTrigger.addEventListener('mouseup', cancelUnlockTimer);
-        unlockTrigger.addEventListener('touchend', cancelUnlockTimer);
-        unlockTrigger.addEventListener('mouseleave', cancelUnlockTimer);
+    unlockTrigger.addEventListener('mousedown', startUnlockTimer);
+    unlockTrigger.addEventListener('touchstart', startUnlockTimer);
+    unlockTrigger.addEventListener('mouseup', cancelUnlockTimer);
+    unlockTrigger.addEventListener('touchend', cancelUnlockTimer);
+    unlockTrigger.addEventListener('mouseleave', cancelUnlockTimer);
     } else {
         console.error("Unlock trigger not found!");
     }
@@ -217,19 +217,6 @@ async function attemptUnlock() {
     }
 }
 
-async function lockApp() {
-    // 서버에 알릴 필요가 있다면 /api/lock 호출 유지, 아니면 클라이언트에서만 처리
-    try {
-        await fetch('/api/lock', { method: 'POST' }); // 서버 세션도 업데이트 (선택적)
-    } catch(e) { console.error("Error calling /api/lock:", e); }
-
-    isLocked = true;
-    localStorage.setItem('appUnlocked', 'false');
-    document.getElementById('lockOverlay').style.display = 'flex';
-    hideControlsPostUnlock();
-    console.log("App locked");
-}
-
 function showControlsPostUnlock() {
     const postUnlockControls = document.getElementById('postUnlockControls');
     if (postUnlockControls) {
@@ -252,11 +239,17 @@ function checkUnlockStatus() {
     const lockOverlay = document.getElementById('lockOverlay');
     if (storedUnlockStatus === 'true') {
         isLocked = false;
-        if(lockOverlay) lockOverlay.style.display = 'none';
+        if(lockOverlay) {
+            lockOverlay.style.display = 'none';
+            lockOverlay.classList.remove('active');
+        }
         showControlsPostUnlock();
     } else {
         isLocked = true;
-        if(lockOverlay) lockOverlay.style.display = 'flex';
+        if(lockOverlay) {
+            lockOverlay.style.display = 'flex';
+            lockOverlay.classList.add('active');
+        }
         hideControlsPostUnlock();
     }
     console.log("Checked unlock status. isLocked:", isLocked);
@@ -370,7 +363,11 @@ function handleVideoSelection() {
     // 비디오 변경 시 앱을 다시 잠금 상태로 만듭니다.
     isLocked = true;
     localStorage.setItem('appUnlocked', 'false');
-    document.getElementById('lockOverlay').style.display = 'flex';
+    const lockOverlay = document.getElementById('lockOverlay');
+    if(lockOverlay) {
+        lockOverlay.style.display = 'flex';
+        lockOverlay.classList.add('active');
+    }
     hideControlsPostUnlock();
     console.log("Video changed, app re-locked (overlay shown, controls hidden).");
 }
