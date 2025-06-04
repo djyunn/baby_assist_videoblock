@@ -11,48 +11,58 @@
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
-        /* PWA 설치 배너 상단 고정 */
+        /* PWA 설치 배너 상단 고정 - 작게 수정 */
         #pwaInstallBanner {
             position: fixed;
             top: 0;
-            left: 0;
-            width: 100%;
-            background-color: #4CAF50;
-            color: white;
-            padding: 6px 10px;
-            text-align: center;
-            z-index: 1000;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            font-size: 12px;
+            justify-content: space-between;
+            padding: 6px 12px;
+            z-index: 1000;
+            font-size: 13px;
+            margin-top: 5px;
         }
         #pwaInstallBanner.hidden {
             display: none !important;
         }
-        #pwaInstallBanner button {
-            background: white;
-            color: #4CAF50;
-            border: none;
-            padding: 3px 6px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            margin-left: 6px;
-            font-size: 11px;
-            white-space: nowrap;
+        #pwaInstallBanner img {
+            width: 16px;
+            height: 16px;
+            margin-right: 6px;
+        }
+        #pwaInstallBanner .banner-content {
             display: flex;
             align-items: center;
+            flex: 1;
+        }
+        #pwaInstallBanner button {
+            margin-left: 6px;
+            padding: 3px 8px;
+            font-size: 12px;
+            border-radius: 4px;
+            border: 1px solid #bbb;
+            background: #f7f7f7;
+            cursor: pointer;
+            transition: background 0.2s;
         }
         #pwaInstallBanner button:hover {
-            background: #f0f0f0;
+            background: #e0e0e0;
         }
-        #pwaCloseBtn {
-            background: transparent !important;
-            color: white !important;
-            padding: 2px 6px !important;
-            font-size: 12px !important;
+        #pwaInstallBanner .close-btn {
+            background: none;
+            border: none;
+            font-size: 16px;
+            color: #888;
+            margin-left: 6px;
+            cursor: pointer;
         }
         .button-group {
             display: flex;
@@ -144,6 +154,70 @@
         }
         .lock-overlay.active {
             pointer-events: all;
+        }
+        
+        /* 어른인증 모달 스타일 개선 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10001; /* 최상위 레이어로 설정 */
+        }
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 350px;
+            text-align: center;
+        }
+        .modal h2 {
+            margin-top: 0;
+            color: #333;
+            font-size: 20px;
+        }
+        .modal input {
+            width: 100%;
+            padding: 10px;
+            margin: 15px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .modal-buttons button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .modal-buttons button:first-child {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .modal-buttons button:last-child {
+            background-color: #f1f1f1;
+            color: #333;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+            font-size: 14px;
         }
     </style>
 </head>

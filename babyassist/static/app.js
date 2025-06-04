@@ -110,13 +110,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const unlockTrigger = document.getElementById('unlockTrigger');
     
+    // PWA 배너 버튼 클릭 허용
     document.addEventListener('touchstart', function(e) {
         if (isLocked) {
+            // PWA 배너 클릭 허용
+            if (e.target.closest('#pwaInstallBanner')) return;
             e.preventDefault();
         }
     }, { passive: false });
     document.addEventListener('click', function(e) {
         if (isLocked) {
+            // PWA 배너 클릭 허용
+            if (e.target.closest('#pwaInstallBanner')) return;
             e.preventDefault();
         }
     }, true);
@@ -138,8 +143,17 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     loadVideosForMainSelector();
-    checkUnlockStatus();
-
+    
+    // 첫 화면에서 잠금 해제 상태로 시작
+    isLocked = false;
+    localStorage.setItem('appUnlocked', 'true');
+    const lockOverlay = document.getElementById('lockOverlay');
+    if(lockOverlay) {
+        lockOverlay.style.display = 'none';
+        lockOverlay.classList.remove('active');
+    }
+    showControlsPostUnlock();
+    
     const relockButton = document.getElementById('relockButton');
     if (relockButton) {
         relockButton.addEventListener('click', lockApp);
@@ -167,6 +181,14 @@ function showUnlockModal() {
     if(unlockModal) unlockModal.classList.remove('hidden');
     const passwordInput = document.getElementById('passwordInput');
     if(passwordInput) passwordInput.focus();
+    
+    // 어른인증 모달이 표시되어도 잠금 상태 해제
+    isLocked = false;
+    const lockOverlay = document.getElementById('lockOverlay');
+    if(lockOverlay) {
+        lockOverlay.style.display = 'none';
+        lockOverlay.classList.remove('active');
+    }
 }
 
 function closeUnlockModal() {
