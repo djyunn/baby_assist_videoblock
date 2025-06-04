@@ -112,15 +112,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     document.addEventListener('touchstart', function(e) {
         if (isLocked) {
-            // Allow interaction with PWA banner and its children
-            if (e.target.closest('#pwaInstallBanner')) return;
             e.preventDefault();
         }
     }, { passive: false });
     document.addEventListener('click', function(e) {
         if (isLocked) {
-            // Allow interaction with PWA banner and its children
-            if (e.target.closest('#pwaInstallBanner')) return;
             e.preventDefault();
         }
     }, true);
