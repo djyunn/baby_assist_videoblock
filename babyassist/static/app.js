@@ -64,7 +64,8 @@ function initializePlayer(videoId) {
             'rel': 0,
             'showinfo': 0,
             'loop': 1, 
-            'playlist': videoId
+            'playlist': videoId,
+            'origin': window.location.origin
         },
         events: {
             'onReady': onPlayerReady,
