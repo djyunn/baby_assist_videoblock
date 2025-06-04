@@ -50,6 +50,7 @@ function initializePlayer(videoId) {
         player.destroy();
     }
     console.log(`Initializing player with videoId: ${videoId}`);
+    // 현재 origin 가져오기
     const currentOrigin = window.location.origin;
     console.log('Current origin:', currentOrigin);
     
@@ -68,8 +69,9 @@ function initializePlayer(videoId) {
             'showinfo': 0,
             'loop': 1,
             'playlist': videoId,
-            'origin': currentOrigin,
-            'host': currentOrigin,
+            // origin 설정 제거 - YouTube가 자동으로 처리하도록 함
+            // 'origin': currentOrigin,
+            // 'host': currentOrigin,
             'enablejsapi': 1
         },
         events: {
@@ -86,6 +88,17 @@ function onPlayerReady(event) {
     console.log("Player is ready.");
     event.target.playVideo();
     setVolume(50);
+    
+    // 플레이어가 준비되면 잠금 상태 확인 및 적용
+    if (isLocked) {
+        const lockOverlay = document.getElementById('lockOverlay');
+        if(lockOverlay) {
+            lockOverlay.style.display = 'flex';
+            lockOverlay.classList.add('active');
+        }
+        hideControlsPostUnlock();
+        console.log("Player ready, ensuring app is locked.");
+    }
 }
 
 function onPlayerStateChange(event) {
@@ -158,6 +171,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (relockButton) {
         relockButton.addEventListener('click', lockApp);
     }
+    // 설정 페이지 가기 버튼 이벤트 리스너 추가
     const goToSettingsButton = document.getElementById('goToSettingsButton');
     if (goToSettingsButton) {
         goToSettingsButton.addEventListener('click', openSettingsPage);
@@ -274,14 +288,54 @@ function checkUnlockStatus() {
     console.log("Checked unlock status. isLocked:", isLocked);
 }
 
+// openSettingsPage 함수 수정
 function openSettingsPage() {
-    // 이 함수는 '설정 페이지 가기' 버튼과 연결됨
-    // 이미 잠금 해제된 상태에서만 이 버튼이 보이므로, isLocked 체크는 불필요할 수 있음
-    if (!isLocked) {
+    // 설정 페이지 비밀번호 모달 표시
+    showSettingsPasswordModal();
+}
+
+// 설정 페이지 비밀번호 모달 표시 함수
+function showSettingsPasswordModal() {
+    const settingsPasswordModal = document.getElementById('settingsPasswordModal');
+    if (settingsPasswordModal) {
+        settingsPasswordModal.classList.remove('hidden');
+    }
+}
+
+// 설정 페이지 비밀번호 모달 닫기 함수
+function closeSettingsModal() {
+    const settingsPasswordModal = document.getElementById('settingsPasswordModal');
+    if (settingsPasswordModal) {
+        settingsPasswordModal.classList.add('hidden');
+    }
+    const passwordInput = document.getElementById('settingsPasswordInput');
+    if (passwordInput) {
+        passwordInput.value = '';
+    }
+    const errorMessageElement = document.getElementById('settingsErrorMessage');
+    if (errorMessageElement) {
+        errorMessageElement.classList.add('hidden');
+    }
+}
+
+// 설정 페이지 비밀번호 확인 함수
+function verifySettingsPassword() {
+    const passwordInput = document.getElementById('settingsPasswordInput');
+    if (!passwordInput) return;
+    
+    const password = passwordInput.value;
+    const errorMessageElement = document.getElementById('settingsErrorMessage');
+    
+    // 비밀번호 확인 (yunina)
+    if (password === 'yunina') {
+        // 비밀번호 일치 시 설정 페이지로 이동
         window.location.href = '/admin';
     } else {
-        // 만약을 위해 잠금 모달을 보여줄 수 있지만, 버튼 자체가 잠금 해제 시에만 보여야 함
-        showUnlockModal();
+        // 비밀번호 불일치 시 오류 메시지 표시
+        if (errorMessageElement) {
+            errorMessageElement.textContent = '잘못된 비밀번호입니다.';
+            errorMessageElement.classList.remove('hidden');
+        }
     }
 }
 
@@ -380,15 +434,17 @@ function handleVideoSelection() {
     }
 
     // 비디오 변경 시 앱을 다시 잠금 상태로 만듭니다.
-    isLocked = true;
-    localStorage.setItem('appUnlocked', 'false');
-    const lockOverlay = document.getElementById('lockOverlay');
-    if(lockOverlay) {
-        lockOverlay.style.display = 'flex';
-        lockOverlay.classList.add('active');
-    }
-    hideControlsPostUnlock();
-    console.log("Video changed, app re-locked (overlay shown, controls hidden).");
+    setTimeout(() => {
+        isLocked = true;
+        localStorage.setItem('appUnlocked', 'false');
+        const lockOverlay = document.getElementById('lockOverlay');
+        if(lockOverlay) {
+            lockOverlay.style.display = 'flex';
+            lockOverlay.classList.add('active');
+        }
+        hideControlsPostUnlock();
+        console.log("Video changed, app re-locked (overlay shown, controls hidden).");
+    }, 500); // 비디오 로드 후 약간의 지연 시간을 두고 잠금 적용
 }
 
 async function lockApp() {

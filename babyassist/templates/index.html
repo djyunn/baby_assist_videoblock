@@ -324,6 +324,26 @@
             <!-- 필요시 여기에 다른 버튼 추가 -->
         </div>
 
+        <!-- 잠금 해제 후 컨트롤 -->
+        <div id="postUnlockControls" class="hidden">
+            <button id="relockButton">다시 잠그기</button>
+            <button id="goToSettingsButton">설정 페이지 가기</button>
+            <!-- 필요시 여기에 다른 버튼 추가 -->
+        </div>
+
+        <!-- 설정 페이지 비밀번호 모달 추가 -->
+        <div id="settingsPasswordModal" class="modal hidden">
+            <div class="modal-content">
+                <h2>관리자 인증</h2>
+                <input type="password" id="settingsPasswordInput" placeholder="관리자 비밀번호 입력">
+                <div class="modal-buttons">
+                    <button onclick="verifySettingsPassword()">확인</button>
+                    <button onclick="closeSettingsModal()">취소</button>
+                </div>
+                <div id="settingsErrorMessage" class="error hidden"></div>
+            </div>
+        </div>
+
         <!-- 기존 Admin panel (주석 처리 또는 삭제) -->
         <!-- 
         <div id="adminPanel" class="admin-panel hidden">
