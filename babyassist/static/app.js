@@ -44,15 +44,15 @@ function initializePlayer(videoId) {
         console.log("YouTube API not ready yet. Player initialization deferred. Storing video ID: ", videoId);
         initialVideoIdToLoad = videoId; 
         return;
-        
     }
     if (player) {
         player.destroy();
     }
     console.log(`Initializing player with videoId: ${videoId}`);
-    // 현재 origin 가져오기
-    const currentOrigin = window.location.origin;
-    console.log('Current origin:', currentOrigin);
+    
+    // Remove the origin logging as it's not needed
+    // const currentOrigin = window.location.origin;
+    // console.log('Current origin:', currentOrigin);
     
     player = new YT.Player('player', {
         height: '100%',
@@ -69,9 +69,7 @@ function initializePlayer(videoId) {
             'showinfo': 0,
             'loop': 1,
             'playlist': videoId,
-            // origin 설정 제거 - YouTube가 자동으로 처리하도록 함
-            // 'origin': currentOrigin,
-            // 'host': currentOrigin,
+            // Remove all origin-related settings
             'enablejsapi': 1
         },
         events: {
@@ -95,6 +93,8 @@ function onPlayerReady(event) {
         if(lockOverlay) {
             lockOverlay.style.display = 'flex';
             lockOverlay.classList.add('active');
+            // 확실하게 z-index 설정
+            lockOverlay.style.zIndex = '10000';
         }
         hideControlsPostUnlock();
         console.log("Player ready, ensuring app is locked.");
@@ -441,10 +441,12 @@ function handleVideoSelection() {
         if(lockOverlay) {
             lockOverlay.style.display = 'flex';
             lockOverlay.classList.add('active');
+            // 확실하게 z-index 설정
+            lockOverlay.style.zIndex = '10000';
         }
         hideControlsPostUnlock();
         console.log("Video changed, app re-locked (overlay shown, controls hidden).");
-    }, 500); // 비디오 로드 후 약간의 지연 시간을 두고 잠금 적용
+    }, 1000); // 비디오 로드 후 지연 시간을 1초로 늘림
 }
 
 async function lockApp() {
