@@ -111,14 +111,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const unlockTrigger = document.getElementById('unlockTrigger');
     
     document.addEventListener('touchstart', function(e) {
-        if (isLocked && !e.target.closest('.modal') && !e.target.closest('#mainVideoSelect')) {
+        if (isLocked && !e.target.closest('.modal') && !e.target.closest('#mainVideoSelect') && !e.target.closest('#pwaInstallBanner')) {
             e.preventDefault();
             e.stopPropagation();
         }
     }, { passive: false });
     
     document.addEventListener('click', function(e) {
-        if (isLocked && !e.target.closest('.modal') && !e.target.closest('.unlock-trigger') && !e.target.closest('#mainVideoSelectContainer')) {
+        if (isLocked && !e.target.closest('.modal') && !e.target.closest('.unlock-trigger') && 
+            !e.target.closest('#mainVideoSelectContainer') && !e.target.closest('#pwaInstallBanner')) {
             e.preventDefault();
             e.stopPropagation();
         }

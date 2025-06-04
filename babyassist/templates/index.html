@@ -19,14 +19,14 @@
             width: 100%;
             background-color: #4CAF50;
             color: white;
-            padding: 8px 15px;
+            padding: 6px 10px; /* 패딩 줄임 */
             text-align: center;
             z-index: 1000;
             display: flex;
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            font-size: 14px;
+            font-size: 12px; /* 글자 크기 줄임 */
         }
         #pwaInstallBanner.hidden {
             display: none !important;
@@ -35,12 +35,12 @@
             background: white;
             color: #4CAF50;
             border: none;
-            padding: 4px 8px;
+            padding: 3px 6px; /* 패딩 줄임 */
             border-radius: 4px;
             cursor: pointer;
             font-weight: bold;
-            margin-left: 8px;
-            font-size: 12px;
+            margin-left: 6px; /* 마진 줄임 */
+            font-size: 11px; /* 글자 크기 줄임 */
             white-space: nowrap;
             display: flex;
             align-items: center;
@@ -51,25 +51,25 @@
         #pwaCloseBtn {
             background: transparent !important;
             color: white !important;
-            padding: 4px 8px !important;
-            font-size: 14px !important;
+            padding: 2px 6px !important; /* 패딩 줄임 */
+            font-size: 12px !important;
         }
         .button-group {
             display: flex;
-            gap: 8px;
+            gap: 4px; /* 간격 줄임 */
             align-items: center;
         }
         #app {
-            padding-top: 35px;
+            padding-top: 30px; /* 상단 패딩 줄임 */
         }
         /* 재생목록 선택기 스타일 */
         #mainVideoSelectContainer {
             position: fixed;
-            top: 45px;
+            top: 35px; /* 상단 위치 조정 */
             left: 50%;
             transform: translateX(-50%);
             z-index: 999;
-            padding: 12px 15px;
+            padding: 10px 12px; /* 패딩 줄임 */
             background-color: white;
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
@@ -151,11 +151,11 @@
     <!-- PWA 설치 버튼 -->
     <div id="pwaInstallBanner" class="pwa-install-banner">
         <span style="display: flex; align-items: center;">
-            <img src="{{ url_for('static', filename='favicon.ico') }}" alt="App Icon" style="width: 16px; height: 16px; margin-right: 6px;">
+            <img src="{{ url_for('static', filename='favicon.ico') }}" alt="App Icon" style="width: 14px; height: 14px; margin-right: 4px;">
             더 나은 사용을 위해 앱으로 설치하세요!
         </span>
         <div class="button-group">
-            <button id="pwaInstallBtn"><img src="{{ url_for('static', filename='favicon.ico') }}" alt="App Icon" style="width: 14px; height: 14px; margin-right: 4px; vertical-align: middle;">앱 설치하기</button>
+            <button id="pwaInstallBtn"><img src="{{ url_for('static', filename='favicon.ico') }}" alt="App Icon" style="width: 12px; height: 12px; margin-right: 3px; vertical-align: middle;">앱 설치하기</button>
             <button id="pwaCloseBtn">✕</button>
         </div>
     </div>
