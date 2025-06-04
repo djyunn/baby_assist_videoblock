@@ -131,11 +131,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     if (unlockTrigger) {
-    unlockTrigger.addEventListener('mousedown', startUnlockTimer);
-    unlockTrigger.addEventListener('touchstart', startUnlockTimer);
-    unlockTrigger.addEventListener('mouseup', cancelUnlockTimer);
-    unlockTrigger.addEventListener('touchend', cancelUnlockTimer);
-    unlockTrigger.addEventListener('mouseleave', cancelUnlockTimer);
+        unlockTrigger.addEventListener('mousedown', startUnlockTimer);
+        unlockTrigger.addEventListener('touchstart', startUnlockTimer);
+        unlockTrigger.addEventListener('mouseup', cancelUnlockTimer);
+        unlockTrigger.addEventListener('touchend', cancelUnlockTimer);
+        unlockTrigger.addEventListener('mouseleave', cancelUnlockTimer);
     } else {
         console.error("Unlock trigger not found!");
     }
@@ -370,4 +370,22 @@ function handleVideoSelection() {
     }
     hideControlsPostUnlock();
     console.log("Video changed, app re-locked (overlay shown, controls hidden).");
+}
+
+async function lockApp() {
+    try {
+        await fetch('/api/lock', { method: 'POST' });
+    } catch(e) { 
+        console.error("Error calling /api/lock:", e); 
+    }
+    
+    isLocked = true;
+    localStorage.setItem('appUnlocked', 'false');
+    const lockOverlay = document.getElementById('lockOverlay');
+    if(lockOverlay) {
+        lockOverlay.style.display = 'flex';
+        lockOverlay.classList.add('active');
+    }
+    hideControlsPostUnlock();
+    console.log("App locked");
 }
