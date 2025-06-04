@@ -353,6 +353,12 @@ function handleVideoSelection() {
     currentVideoId = selectElement.value;
     console.log("Video selection changed to:", currentVideoId);
     
+    // 비디오 컨테이너 표시
+    const videoContainer = document.querySelector('.video-container');
+    if (videoContainer) {
+        videoContainer.classList.remove('hidden');
+    }
+    
     if (player && player.loadVideoById) {
         console.log("Loading new video into existing player.");
         player.loadVideoById(currentVideoId);
