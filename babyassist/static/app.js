@@ -88,15 +88,18 @@ function onPlayerReady(event) {
     setVolume(50);
     
     // 플레이어가 준비되면 잠금 상태 확인 및 적용
+    // if (isLocked) {
+    //     const lockOverlay = document.getElementById('lockOverlay');
+    //     if(lockOverlay) {
+    //         lockOverlay.style.display = 'flex';
+    //         lockOverlay.classList.add('active');
+    //         // 확실하게 z-index 설정
+    //         lockOverlay.style.zIndex = '10000';
+    //     }
+    //     hideControlsPostUnlock();
     if (isLocked) {
-        const lockOverlay = document.getElementById('lockOverlay');
-        if(lockOverlay) {
-            lockOverlay.style.display = 'flex';
-            lockOverlay.classList.add('active');
-            // 확실하게 z-index 설정
-            lockOverlay.style.zIndex = '10000';
-        }
-        hideControlsPostUnlock();
+        document.getElementById('lockOverlay').classList.remove('hidden');
+            
         console.log("Player ready, ensuring app is locked.");
     }
 }
@@ -144,7 +147,22 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
         }
     });
+    document.addEventListener('touchmove', function(e) {
+        if (isLocked) {
+            e.preventDefault();
+        }
+    }, { passive: false });
     
+    document.addEventListener('touchend', function(e) {
+        if (isLocked) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+    
+    // 잠금 해제 트리거 처리
+    document.getElementById('unlockTrigger').addEventListener('click', function() {
+        showUnlockModal();
+    });
     if (unlockTrigger) {
         unlockTrigger.addEventListener('mousedown', startUnlockTimer);
         unlockTrigger.addEventListener('touchstart', startUnlockTimer);
