@@ -17,35 +17,72 @@
             top: 0;
             left: 0;
             width: 100%;
-            background-color: #f8f9fa;
-            padding: 10px;
-            border-bottom: 1px solid #dee2e6;
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px;
+            text-align: center;
             z-index: 1000;
-            display: flex; /* flex로 변경 */
-            justify-content: space-between; /* 양쪽 정렬 */
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            text-align: center; /* 중앙 정렬은 유지 */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         #pwaInstallBanner.hidden {
-            display: none !important; /* important 추가 */
+            display: none !important;
+        }
+        #pwaInstallBanner button {
+            background: white;
+            color: #4CAF50;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        #pwaInstallBanner button:hover {
+            background: #f0f0f0;
+        }
+        #pwaCloseBtn {
+            background: transparent !important;
+            color: white !important;
+            padding: 5px 10px !important;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
         }
         #app {
-            padding-top: 60px; /* PWA 배너 높이만큼 패딩 추가 */
+            padding-top: 60px;
         }
         /* 재생목록 선택기 스타일 */
         #mainVideoSelectContainer {
             position: fixed;
-            top: 70px; /* PWA 배너 아래 */
+            top: 70px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 999;
-            padding: 10px;
-            background-color: rgba(255, 255, 255, 0.9);
+            padding: 15px 20px;
+            background-color: white;
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
         }
         #mainVideoSelectContainer label {
-            margin-right: 10px;
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #333;
+        }
+        #mainVideoSelect {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
         }
         /* 잠금 해제 후 컨트롤 버튼 스타일 */
         #postUnlockControls {
@@ -88,11 +125,11 @@
 </head>
 <body>
     <!-- PWA 설치 버튼 -->
-    <div id="pwaInstallBanner" class="pwa-install-banner hidden">
-        <span>홈 화면에 Baby Video Player 추가하기</span>
-        <div>
-            <button id="pwaInstallBtn">설치</button>
-            <button id="pwaCloseBtn">×</button>
+    <div id="pwaInstallBanner" class="pwa-install-banner">
+        <span>더 나은 사용을 위해 앱으로 설치하세요!</span>
+        <div class="button-group">
+            <button id="pwaInstallBtn">앱 설치하기</button>
+            <button id="pwaCloseBtn">✕</button>
         </div>
     </div>
 
@@ -162,7 +199,7 @@
     <!-- PWA Service Worker and Install Prompt Logic -->
     <script>
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register("{{ url_for('static', filename='sw.js') }}") // 경로 수정
+            navigator.serviceWorker.register("{{ url_for('static', filename='sw.js') }}")
                 .then(registration => console.log('SW registered:', registration))
                 .catch(error => console.log('SW registration failed:', error));
         }
@@ -172,31 +209,55 @@
         const pwaInstallBtn = document.getElementById('pwaInstallBtn');
         const pwaCloseBtn = document.getElementById('pwaCloseBtn');
 
+        // 이미 설치되어 있는지 확인
+        window.addEventListener('load', () => {
+            // standalone 모드에서 실행 중인지 확인
+            if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+                if (pwaInstallBanner) pwaInstallBanner.classList.add('hidden');
+            }
+        });
+
         window.addEventListener('beforeinstallprompt', (e) => {
             console.log('beforeinstallprompt event fired');
             e.preventDefault();
             deferredPrompt = e;
-            if (pwaInstallBanner) pwaInstallBanner.classList.remove('hidden');
+            // 이미 설치되어 있지 않은 경우에만 배너 표시
+            if (pwaInstallBanner && !window.matchMedia('(display-mode: standalone)').matches) {
+                pwaInstallBanner.classList.remove('hidden');
+            }
         });
         
         if (pwaInstallBtn) {
             pwaInstallBtn.addEventListener('click', async () => {
-                if (pwaInstallBanner) pwaInstallBanner.classList.add('hidden');
                 if (deferredPrompt) {
                     deferredPrompt.prompt();
                     const { outcome } = await deferredPrompt.userChoice;
                     console.log('User response to the install prompt:', outcome);
+                    if (outcome === 'accepted') {
+                        if (pwaInstallBanner) pwaInstallBanner.classList.add('hidden');
+                    }
                     deferredPrompt = null;
                 } else {
                     console.log('deferredPrompt not available');
+                    // 설치 프롬프트를 표시할 수 없는 경우 안내 메시지
+                    alert('이미 설치되어 있거나 설치할 수 없는 환경입니다.');
                 }
             });
         }
         
         if (pwaCloseBtn) {
             pwaCloseBtn.addEventListener('click', () => {
-                if (pwaInstallBanner) pwaInstallBanner.classList.add('hidden');
+                if (pwaInstallBanner) {
+                    pwaInstallBanner.classList.add('hidden');
+                    // 사용자가 닫은 것을 기억
+                    localStorage.setItem('pwaInstallBannerClosed', 'true');
+                }
             });
+        }
+
+        // 페이지 로드 시 사용자가 이전에 배너를 닫았는지 확인
+        if (localStorage.getItem('pwaInstallBannerClosed') === 'true') {
+            if (pwaInstallBanner) pwaInstallBanner.classList.add('hidden');
         }
     </script>
 </body>
