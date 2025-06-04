@@ -111,19 +111,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const unlockTrigger = document.getElementById('unlockTrigger');
     
     document.addEventListener('touchstart', function(e) {
-        if (isLocked && !e.target.closest('.modal') && !e.target.closest('#mainVideoSelect') && !e.target.closest('#pwaInstallBanner')) {
+        if (isLocked) {
+            // Allow interaction with PWA banner and its children
+            if (e.target.closest('#pwaInstallBanner')) return;
             e.preventDefault();
-            e.stopPropagation();
         }
     }, { passive: false });
-    
     document.addEventListener('click', function(e) {
-        if (isLocked && !e.target.closest('.modal') && !e.target.closest('.unlock-trigger') && 
-            !e.target.closest('#mainVideoSelectContainer') && !e.target.closest('#pwaInstallBanner')) {
+        if (isLocked) {
+            // Allow interaction with PWA banner and its children
+            if (e.target.closest('#pwaInstallBanner')) return;
             e.preventDefault();
-            e.stopPropagation();
         }
-    }, { capture: true });
+    }, true);
     
     document.addEventListener('contextmenu', function(e) {
         if (isLocked) {
