@@ -290,11 +290,11 @@ function checkUnlockStatus() {
 
 // openSettingsPage 함수 수정
 function openSettingsPage() {
-    // 설정 페이지 비밀번호 모달 표시
-    showSettingsPasswordModal();
+    // 설정 페이지로 직접 이동 (unlock.html로 리디렉션됨)
+    window.location.href = '/admin';
 }
 
-// 설정 페이지 비밀번호 모달 표시 함수
+// 설정 페이지 비밀번호 모달 표시
 function showSettingsPasswordModal() {
     const settingsPasswordModal = document.getElementById('settingsPasswordModal');
     if (settingsPasswordModal) {
