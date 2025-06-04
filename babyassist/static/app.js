@@ -50,10 +50,6 @@ function initializePlayer(videoId) {
     }
     console.log(`Initializing player with videoId: ${videoId}`);
     
-    // Remove the origin logging as it's not needed
-    // const currentOrigin = window.location.origin;
-    // console.log('Current origin:', currentOrigin);
-    
     player = new YT.Player('player', {
         height: '100%',
         width: '100%',
@@ -69,8 +65,9 @@ function initializePlayer(videoId) {
             'showinfo': 0,
             'loop': 1,
             'playlist': videoId,
-            // Remove all origin-related settings
-            'enablejsapi': 1
+            'enablejsapi': 1,
+            'playsinline': 1,
+            'origin': window.location.origin
         },
         events: {
             'onReady': onPlayerReady,
@@ -80,6 +77,24 @@ function initializePlayer(videoId) {
             }
         }
     });
+
+    // YouTube 컨트롤 차단을 위한 투명 오버레이 추가
+    const playerContainer = document.getElementById('player');
+    if (playerContainer) {
+        const blocker = document.createElement('div');
+        blocker.className = 'youtube-control-blocker';
+        blocker.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            background: transparent;
+            pointer-events: all;
+        `;
+        playerContainer.parentElement.appendChild(blocker);
+    }
 }
 
 function onPlayerReady(event) {
@@ -93,11 +108,16 @@ function onPlayerReady(event) {
         if(lockOverlay) {
             lockOverlay.style.display = 'flex';
             lockOverlay.classList.add('active');
-            // 확실하게 z-index 설정
             lockOverlay.style.zIndex = '10000';
         }
         hideControlsPostUnlock();
         console.log("Player ready, ensuring app is locked.");
+    }
+
+    // YouTube 컨트롤 차단을 위한 추가 설정
+    const iframe = document.querySelector('#player iframe');
+    if (iframe) {
+        iframe.style.pointerEvents = 'none';
     }
 }
 
