@@ -16,11 +16,12 @@ body {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0,0,0,0.01);
+    background: rgba(0,0,0,0.5);
     z-index: 10000;
     display: flex;
     justify-content: center;
     align-items: center;
+    pointer-events: all;
 }
 
 .video-container {
@@ -43,6 +44,8 @@ body {
     background: rgba(255, 255, 255, 0.1);
     border-radius: 50%;
     cursor: pointer;
+    z-index: 10001;
+    pointer-events: all;
 }
 
 .unlock-trigger:hover {
